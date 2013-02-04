@@ -1392,6 +1392,7 @@ if (!$cmd_data)
 	{
 	    $result = ec2($service, @list);
 	}
+	$exit_code = $? >> 8;
     }
     elsif ($service eq "s3")
     {
