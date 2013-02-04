@@ -27,6 +27,7 @@ $iam_version = "2010-05-08";
 $sts_version = "2011-06-15";
 $pa_version  = "2009-01-06";
 $r53_version = "2012-02-29";
+$sns_version = "2010-03-31";
 
 
 #
@@ -734,6 +735,18 @@ $r53_version = "2012-02-29";
 	 ["c" => Condition],
 	 ["a" => AssociateTag],
      ]],
+     
+     
+    #############
+    ###  SNS  ###
+    #############     
+     
+    ["sns", "sns-publish publish", Publish, [
+      ["" => TopicArn],
+      ["message m" => Message],
+      ["subject s" => Subject],      
+      ["message-structure m" => MessageStructure],
+      ]],     
     );
 
 
@@ -878,7 +891,7 @@ END {close STDOUT}
 $s3host ||= $ENV{S3_URL} || "s3.amazonaws.com";
 
 
-print STDERR "aws version: v$program_version  (ec2: $ec2_version, sqs: $sqs_version, elb: $elb_version, sdb: $sdb_version, iam: $iam_version)\n" if $v;
+print STDERR "aws version: v$program_version  (ec2: $ec2_version, sqs: $sqs_version, elb: $elb_version, sdb: $sdb_version, iam: $iam_version, sns: $sns_version)\n" if $v;
 
 $insecsign = "--insecure" if $insecure || $insecure_signing;
 $insecureaws = "--insecure" if $insecureaws || $insecure_aws;
@@ -1286,7 +1299,7 @@ if (!$cmd_data)
 
     my($result);
 
-    if ($service eq "ec2" || $service eq "sqs" || $service eq "elb" || $service eq "sdb" || $service eq "iam" || $service eq "pa")
+    if ($service eq "ec2" || $service eq "sqs" || $service eq "elb" || $service eq "sdb" || $service eq "iam" || $service eq "pa" || $service eq "sns")
     {
 	#print STDERR "(@{[join(', ', @argv)]})\n" if $v;
 
@@ -2722,6 +2735,7 @@ sub ec2
     $version .= $elb_version if $service eq "elb";
     $version .= $sdb_version if $service eq "sdb";
     $version .= $iam_version if $service eq "iam";
+    $version .= $sns_version if $service eq "sns";
 
     # see http://developer.amazonwebservices.com/connect/entry!default.jspa?externalID=3912
     $region = {eu => "eu-west-1", us => "us-east-1", uswest => "us-west-1", ap => "ap-southeast-1"}->{lc $region} || $region;
@@ -2756,6 +2770,12 @@ sub ec2
     {
 	$endpoint = "iam.amazonaws.com";
 	# $endpoint = "iam.$region.amazonaws.com" if $region;
+    }
+
+    if ($service eq "sns")
+    {
+        $endpoint = "sns.us-east-1.amazonaws.com";
+        $endpoint = "sns.$region.amazonaws.com" if $region;
     }
 
     my @session = (SecurityToken => $session) if $session;
